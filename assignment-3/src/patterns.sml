@@ -1,6 +1,6 @@
 (*
-Your name:
-Your student id:
+Your name: Tarush Roy
+Your student id: V00883469
 *)
 
 structure Patterns =
@@ -29,11 +29,109 @@ datatype value = Const of int
 
 (* write your tree functions here *)
 
+(* Part 1 - Start *)
+
+(* Function to insert in order.
+ * binding type:
+ * val tree_insert_in_order : tree * int -> tree *)
+fun tree_insert_in_order (t, v) =
+    case t of
+	emptyTree => nodeTree(v, emptyTree, emptyTree)
+      | nodeTree(data, left, right) => if(v <= data)
+				       then nodeTree(data, tree_insert_in_order(left, v), right)
+				       else nodeTree(data, left, tree_insert_in_order(right, v))
+
+(* "Fold" function that applies fn f to each node in tree using preorder traversal.
+ * binding type:
+ * val tree_fold_pre_order : (int * 'a -> 'a) -> 'a -> tree -> 'a *)
+fun tree_fold_pre_order f acc t =
+    case t of
+	emptyTree => acc
+      | nodeTree(data, left, right) => tree_fold_pre_order f (tree_fold_pre_order f (f(data, acc)) left) right
+
+(* Finds max value in a tree.
+ * binding type:
+ * val tree_max : tree -> int option *)
+val tree_max = fn t => SOME(tree_fold_pre_order (fn (x,y) => if(x>=y) then x else y) 0 t)
+
+(* Function to delete node with data, t.
+ * binding type:
+ * val tree_delete : tree * int -> tree *)
+fun tree_delete (t, v) =
+    case t of
+	emptyTree => raise NotFound
+      | nodeTree(data, left, right) => if(v = data)
+				       then (
+					   case (left, right) of
+					       (emptyTree, emptyTree) => emptyTree
+					     | (nodeTree(data, left, right), emptyTree) => left
+					     | (emptyTree, nodeTree(data, left, right)) => right
+					     | (nodeTree(d1, l1, r1), nodeTree(d2, l2, r2)) =>
+					       nodeTree(valOf(tree_max(l1)), tree_delete(left, valOf(tree_max(l1))), r1)
+				       )
+				       else
+					   if(v < data)
+				           then nodeTree(data, tree_delete(left, v), right)
+				           else nodeTree(data, left, tree_delete(right, v))
+
+(* Returns max height of tree.
+ * binding type:
+ * val tree_height : tree -> int *)
+fun tree_height t =
+    0
+
+(* Converts tree to list in pre-order.
+ * binding type:
+ * val tree_to_list : tree -> int list *)
+val tree_to_list = fn t => []    
+
+(* Returns tree with nodes for which f returns true.
+ * binding type:
+ * val tree_filter : (int -> bool) -> tree -> tree *)
+fun tree_filter f t =
+    t
+
+(* Returns sum of nodes that are even.
+ * binding type:
+ * val tree_sum_even : tree -> int *)
+val tree_sum_even = fn t => 0
+
+(* Part 1 - END *)
 
 
+(*(* Part 2 - Start *)
 
+(* Return first SOME result of f on list.
+ * binding type:
+ * val first_answer : ('a -> 'b option) -> 'a list -> 'b *)
+fun first_answer f lst =
+    raise NoAnswer
 
+(* Returns all SOME results of f on list.
+ * binding type:
+ * val all_answers : ('a -> 'b list option) -> 'a list -> 'b list option *)
+fun all_answers f lst =
+    NONE
 
+(* Return true if all variables in the pattern are distinct.
+ * binding type:
+ * val check_pattern : pattern -> bool *)
+fun check_pattern p =
+    false
+
+(* I don't know what this function is supposed to do.
+ * binding type:
+ * val match : value * pattern -> (string * value) list option *)
+fun match (value, pat) =
+    NONE
+
+(* idk
+ * binding type:
+ * val first_match : value -> pattern list -> (string * value) list option *)
+fun first_match value pat_list =
+    NONE
+
+(* Part 2 - END *)*)
 
 
 (* leave the following functions untouched *)

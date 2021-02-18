@@ -67,7 +67,7 @@ val test_tree_sum_even =
       (tree_sum_even tt) = 16
     ])
 
-(* test pattern matching *)
+(*(* test pattern matching *)
 
 val test_first_answer =
     ("P1. test first_answer", [
@@ -130,7 +130,7 @@ val test_first_match =
               ("abcd",Const 7)
            ]
     ]);
-
+*)
 fun main (prog_name, args) =
     let
       val tree_tests = [
@@ -144,14 +144,14 @@ fun main (prog_name, args) =
         test_tree_sum_even
       ]
 
-      val pattern_tests = [
+      (*val pattern_tests = [
         test_first_answer,
         test_all_answers,
         test_check_pattern,
         test_match,
         test_first_match]
-
-      val all_tests = tree_tests @ pattern_tests
+*)
+      val all_tests = tree_tests (*@ pattern_tests*)
       val tests_done = map do_test_set all_tests
       val passed = (foldr (fn (x, acc) => if x then acc + 1 else acc) 0 tests_done)
       val total = length(tests_done)
