@@ -60,58 +60,70 @@ val tree_max = fn t => SOME(tree_fold_pre_order (fn (x,y) => if(x>=y) then x els
 fun tree_delete (t, v) =
     case t of
 	emptyTree => raise NotFound
-      | nodeTree(data, left, right) => if(v = data)
-				       then (
-					   case (left, right) of
-					       (emptyTree, emptyTree) => emptyTree
-					     | (nodeTree(data, left, right), emptyTree) => left
-					     | (emptyTree, nodeTree(data, left, right)) => right
-					     | (nodeTree(d1, l1, r1), nodeTree(d2, l2, r2)) =>
-					       nodeTree(valOf(tree_max(l1)), tree_delete(left, valOf(tree_max(l1))), r1)
-				       )
-				       else
-					   if(v < data)
-				           then nodeTree(data, tree_delete(left, v), right)
-				           else nodeTree(data, left, tree_delete(right, v))
+      | nodeTree(data, left, right) => case Int.compare(v, data) of
+					   EQUAL => (case (left, right) of
+							 (emptyTree, emptyTree) => emptyTree
+						       | (nodeTree(data, l ,r), emptyTree) => left
+						       | (emptyTree, nodeTree(data, l, r)) => right
+						       | _ => nodeTree(valOf(tree_max(left)), tree_delete(left, valOf(tree_max(left))), right)
+						    )
+					 | LESS => nodeTree(data, tree_delete(left, v), right)
+					 | GREATER => nodeTree(data, left, tree_delete(right, v))
 
 (* Returns max height of tree.
  * binding type:
  * val tree_height : tree -> int *)
 fun tree_height t =
-    0
+    case t of
+	emptyTree => 0
+      | nodeTree(data, left, right) => 1 + Int.max(tree_height left, tree_height right)
 
 (* Converts tree to list in pre-order.
  * binding type:
  * val tree_to_list : tree -> int list *)
-val tree_to_list = fn t => []    
+val tree_to_list = fn t => tree_fold_pre_order (fn (data, acc) => acc@[data]) [] t
 
 (* Returns tree with nodes for which f returns true.
  * binding type:
  * val tree_filter : (int -> bool) -> tree -> tree *)
 fun tree_filter f t =
-    t
+    case t of
+	emptyTree => emptyTree
+      | nodeTree(data, left, right) => if(f(data))
+				       then nodeTree(data, tree_filter f left, tree_filter f right)
+				       else tree_filter f (tree_delete(t, data))
 
 (* Returns sum of nodes that are even.
  * binding type:
  * val tree_sum_even : tree -> int *)
-val tree_sum_even = fn t => 0
+val tree_sum_even = fn t => tree_fold_pre_order (fn (data, acc) => acc + data) 0 (tree_filter (fn x => (x mod 2) = 0) t)
 
 (* Part 1 - END *)
 
 
-(*(* Part 2 - Start *)
+(* Part 2 - Start *)
 
 (* Return first SOME result of f on list.
  * binding type:
  * val first_answer : ('a -> 'b option) -> 'a list -> 'b *)
 fun first_answer f lst =
-    raise NoAnswer
+    case lst of
+	[] => raise NoAnswer
+      | head::tail => case f(head) of
+			  NONE => first_answer f tail
+			| SOME x => x
 
 (* Returns all SOME results of f on list.
  * binding type:
  * val all_answers : ('a -> 'b list option) -> 'a list -> 'b list option *)
 fun all_answers f lst =
-    NONE
+    case lst of
+	[] => SOME []
+      | head::tail => case f(head) of
+			  NONE => NONE
+			| SOME result => case (all_answers f tail) of
+					     NONE => NONE
+					   | SOME result' => SOME (result' @ result)
 
 (* Return true if all variables in the pattern are distinct.
  * binding type:
@@ -131,7 +143,7 @@ fun match (value, pat) =
 fun first_match value pat_list =
     NONE
 
-(* Part 2 - END *)*)
+(* Part 2 - END *)
 
 
 (* leave the following functions untouched *)
