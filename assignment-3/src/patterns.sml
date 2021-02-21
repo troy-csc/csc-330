@@ -52,7 +52,9 @@ fun tree_fold_pre_order f acc t =
 (* Finds max value in a tree.
  * binding type:
  * val tree_max : tree -> int option *)
-val tree_max = fn t => SOME(tree_fold_pre_order (fn (x,y) => if(x>=y) then x else y) 0 t)
+val tree_max = fn t => case t of
+			   emptyTree => NONE
+			 | nodeTree(d, l, r) => SOME(tree_fold_pre_order (fn (x,y) => if(x>=y) then x else y) d t)
 
 (* Function to delete node with data, t.
  * binding type:
@@ -94,6 +96,7 @@ fun tree_filter f t =
 				       else tree_filter f (tree_delete(t, data))
 
 (* Returns sum of nodes that are even.
+ * NEED TO USE FUNCTION COMPOSITION. REWRITE BEFORE SUBMITTING.
  * binding type:
  * val tree_sum_even : tree -> int *)
 val tree_sum_even = fn t => tree_fold_pre_order (fn (data, acc) => acc + data) 0 (tree_filter (fn x => (x mod 2) = 0) t)
@@ -119,29 +122,74 @@ fun first_answer f lst =
 fun all_answers f lst =
     case lst of
 	[] => SOME []
-      | head::tail => case f(head) of
-			  NONE => NONE
-			| SOME result => case (all_answers f tail) of
-					     NONE => NONE
-					   | SOME result' => SOME (result' @ result)
+      | head::[] => (case f(head) of
+			 NONE => NONE
+		       | SOME r => SOME r)
+      | head::tail => (case f(head) of
+			   NONE => NONE
+			 | SOME r => (case all_answers f tail of
+					  NONE => NONE
+					| SOME r' => SOME (r @ r')))
 
 (* Return true if all variables in the pattern are distinct.
  * binding type:
  * val check_pattern : pattern -> bool *)
 fun check_pattern p =
-    false
+    let
+	(* Converts a pattern into a list of strings stored in
+	 * the variables of the pattern.
+	 * binding type:
+	 * val helper1 : pattern * string list -> string list *)
+	fun helper1 (pat, lst) =
+	    case pat of
+		Variable s => s::lst
+	      | TupleP pl => List.foldl helper1 lst pl
+	      | ConstructorP (s, patt) => helper1(patt, lst)
+	      | _ => []
 
-(* I don't know what this function is supposed to do.
+	(* Checks for duplicates in the list, returns true for no duplicates.
+	 * binding type:
+	 * val helper2 : string list -> bool *)
+	fun helper2 (str_lst) =
+	    case str_lst of
+		[] => true
+	      | head::tail => if(List.exists (fn h => h = head) tail) (* polyEqual warning *)
+			      then false
+			      else helper2(tail)
+    in
+	helper2(helper1(p, []))
+    end
+
+(* Returns a list of bindings in the specified format if
+ * a pattern matches the value.
  * binding type:
  * val match : value * pattern -> (string * value) list option *)
-fun match (value, pat) =
-    NONE
+fun match (v, pat) =
+    case pat of
+	Wildcard => SOME []
+      | Variable s => SOME [(s, v)]
+      | UnitP => (case v of
+		      Unit => SOME []
+		    | _ => NONE)
+      | ConstP i => (case v of
+			 Const i' => if(i = i') then SOME [] else NONE
+		       | _ => NONE)
+      | TupleP ps => (case v of
+			  Tuple vs => if length ps = length vs
+				      then all_answers match (ListPair.zip(vs, ps))
+				      else NONE
+			| _ => NONE)
+      | ConstructorP (s1, p) => (case v of
+				     Constructor (s2, v2) => if(s1 = s2)
+							     then match(v2, p)
+							     else NONE
+				   | _ => NONE)
 
-(* idk
+(* Returns first list of bindings corresponding to first pattern match from the list.
  * binding type:
  * val first_match : value -> pattern list -> (string * value) list option *)
 fun first_match value pat_list =
-    NONE
+    SOME ((first_answer (fn p => match(value, p)) pat_list)) handle noAnswer => NONE
 
 (* Part 2 - END *)
 
