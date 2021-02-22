@@ -83,7 +83,7 @@ fun tree_height t =
 (* Converts tree to list in pre-order.
  * binding type:
  * val tree_to_list : tree -> int list *)
-val tree_to_list = fn t => tree_fold_pre_order (fn (data, acc) => acc@[data]) [] t
+val tree_to_list = fn t => tree_fold_pre_order (fn (data, acc) => acc @ [data]) [] t
 
 (* Returns tree with nodes for which f returns true.
  * binding type:
@@ -96,10 +96,10 @@ fun tree_filter f t =
 				       else tree_filter f (tree_delete(t, data))
 
 (* Returns sum of nodes that are even.
- * NEED TO USE FUNCTION COMPOSITION. REWRITE BEFORE SUBMITTING.
+ * Uses function compostion of curried functions.
  * binding type:
  * val tree_sum_even : tree -> int *)
-val tree_sum_even = fn t => tree_fold_pre_order (fn (data, acc) => acc + data) 0 (tree_filter (fn x => (x mod 2) = 0) t)
+val tree_sum_even = tree_fold_pre_order (fn (data, acc) => acc + data) 0 o tree_filter (fn x => (x mod 2) = 0)
 
 (* Part 1 - END *)
 
@@ -145,15 +145,16 @@ fun check_pattern p =
 		Variable s => s::lst
 	      | TupleP pl => List.foldl helper1 lst pl
 	      | ConstructorP (s, patt) => helper1(patt, lst)
-	      | _ => []
+	      | _ => lst
 
 	(* Checks for duplicates in the list, returns true for no duplicates.
 	 * binding type:
 	 * val helper2 : string list -> bool *)
-	fun helper2 (str_lst) =
+	fun helper2 (str_lst : string list) =
 	    case str_lst of
 		[] => true
-	      | head::tail => if(List.exists (fn h => h = head) tail) (* polyEqual warning *)
+	      | head::[] => true
+	      | head::tail => if(List.exists (fn h => h = head) tail)
 			      then false
 			      else helper2(tail)
     in
